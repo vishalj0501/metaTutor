@@ -24,3 +24,28 @@ Return JSON format:
 }}
 
 """
+
+ANSWER_EVALUATION_PROMPT = """
+You are an expert evaluator assessing a student's answer to a diagnostic question.
+
+Topic: {topic}
+Question: {question}
+Expected Level: {expected_level:.1f}/1.0
+Student Answer: {user_answer}
+
+Evaluate the answer quality on a scale of 0.0 to 1.0 considering:
+- Accuracy and correctness
+- Depth of understanding shown
+- Use of appropriate terminology
+- Logical reasoning
+- Completeness of response
+
+Return JSON format:
+{{
+    "quality_score": 0.X,
+    "reasoning": "detailed explanation of the evaluation",
+    "strengths": ["list of what the student did well"],
+    "weaknesses": ["list of areas for improvement"],
+    "level_indication": "beginner/intermediate/advanced"
+}}
+"""
