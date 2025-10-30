@@ -8,6 +8,7 @@ and teaching strategy responses.
 
 import json
 from typing import Dict, Any, List, Optional, Union
+import re
 
 
 class ParseError(Exception):
@@ -151,7 +152,8 @@ def parse_strategy_selection(response: str) -> Dict[str, Any]:
         ParseError: If parsing fails
     """
     try:
-        data = json.loads(response)
+        cleaned = _extract_json_string(response)
+        data = json.loads(cleaned)
         
         # Validate required fields
         required_fields = ["chosen_strategy", "reasoning", "confidence"]
@@ -362,6 +364,41 @@ def _get_fallback_data(parser_name: str) -> Dict[str, Any]:
     }
     
     return fallbacks.get(parser_name, {"error": "Unknown parser"})
+
+
+def _extract_json_string(text: str) -> str:
+    """Best-effort extraction of a JSON object string from arbitrary LLM text.
+    Handles fenced code blocks and surrounding prose.
+    """
+    if not isinstance(text, str):
+        raise ParseError("Response is not a string")
+
+    stripped = text.strip()
+    # If it's already valid JSON, return early
+    if stripped.startswith("{") and stripped.endswith("}"):
+        return stripped
+
+    # Handle fenced code blocks ```json ... ``` or ``` ... ```
+    if "```" in stripped:
+        parts = stripped.split("```")
+        # Look through code blocks (odd indices) to find JSON-looking content
+        for i in range(1, len(parts), 2):
+            block = parts[i]
+            # Remove an optional language tag like 'json' at the start of the block
+            block = re.sub(r"^\s*json\s*\n", "", block, flags=re.IGNORECASE)
+            candidate = block.strip()
+            if candidate.startswith("{") and candidate.endswith("}"):
+                return candidate
+
+    # Fallback: find the first {...} span heuristically
+    start = stripped.find("{")
+    end = stripped.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        candidate = stripped[start:end + 1].strip()
+        return candidate
+
+    # Nothing JSON-like found
+    return stripped
 
 
 # ============================================================================

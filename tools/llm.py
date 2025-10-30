@@ -11,7 +11,7 @@ load_dotenv()
 class LLM:
     """LLM wrapper that uses real or mock implementation."""
 
-    def __init__(self, model: str = "gemini-2.5-pro", api_key: Optional[str] = None, use_mock: bool = False):
+    def __init__(self, model: str = "gemini-2.5-flash", api_key: Optional[str] = None, use_mock: bool = False):
         self.model = model
 
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
