@@ -55,7 +55,7 @@ def teaching_session_node(state: AgentState) -> Dict[str, Any]:
     prompt = get_strategy_prompt(strategy, topic, student_level)
     
     # Call LLM
-    llm = get_llm(use_mock=True)
+    llm = get_llm(use_mock=False)
     response = llm.invoke(prompt)
     
     # Handle response format

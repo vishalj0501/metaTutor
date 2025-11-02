@@ -203,7 +203,9 @@ def parse_teaching_response(response: str, strategy_name: str) -> Dict[str, Any]
         ParseError: If parsing fails
     """
     try:
-        data = json.loads(response)
+        # Extract JSON from response (handles markdown code blocks)
+        cleaned = _extract_json_string(response)
+        data = json.loads(cleaned)
         
         # Validate based on strategy type
         if strategy_name == "direct_explanation":

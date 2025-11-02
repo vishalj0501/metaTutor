@@ -162,7 +162,7 @@ def main():
         print(f"✅ Selected: {selected_strategy}")
         
         # Step 2: Teaching Session
-        session_updates = run_teaching_session(state)
+        session_updates = teaching_session_node(state)
         state.update(session_updates)
         
         # Step 3: Progress Check
