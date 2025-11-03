@@ -112,7 +112,7 @@ def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
     
     print(f"\nAgent reasoning about strategy choice...")
     
-    llm = get_llm(use_mock=False)
+    llm = get_llm(use_mock=True)
     
     prompt = get_strategy_selection_prompt(
         strategies_desc=strategies_desc,

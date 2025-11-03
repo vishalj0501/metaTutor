@@ -161,6 +161,34 @@ Return JSON format:
 }
 
 # ============================================================================
+# PRACTICE QUESTION PROMPT
+# ============================================================================
+
+PRACTICE_QUESTION_PROMPT = """
+Generate practice questions for the student based on what was just taught.
+
+Topic: {topic}
+Student Level: {student_level:.2f}/1.0
+Teaching Strategy Used: {strategy}
+Teaching Content Summary: {teaching_summary}
+
+Generate ONE practice question that:
+- Tests understanding of the concept taught
+- Matches the student's proficiency level
+- Aligns with the teaching strategy style ({strategy})
+- Is specific and answerable based on the teaching content
+
+Return JSON format:
+{{
+    "question": "Practice question text",
+    "expected_answer": "What a good answer should include",
+    "difficulty": 0.X,
+    "hints": ["optional hint 1", "optional hint 2"],
+    "reasoning": "Why this question helps the student practice"
+}}
+"""
+
+# ============================================================================
 # STRATEGY SELECTION PROMPT
 # ============================================================================
 

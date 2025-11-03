@@ -320,6 +320,68 @@ def _parse_visual(data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
+def parse_practice_question(response: str) -> Dict[str, Any]:
+    """
+    Parse practice question response from LLM.
+    
+    Expected JSON format:
+    {
+        "question": "Practice question text",
+        "expected_answer": "What a good answer should include",
+        "difficulty": 0.X,
+        "hints": ["optional hint 1", "optional hint 2"],
+        "reasoning": "Why this question helps the student practice"
+    }
+    
+    Args:
+        response: Raw LLM response string
+        
+    Returns:
+        Parsed practice question data
+        
+    Raises:
+        ParseError: If parsing fails
+    """
+    try:
+        cleaned = _extract_json_string(response)
+        data = json.loads(cleaned)
+        
+
+        required_fields = ["question", "expected_answer", "difficulty"]
+        for field in required_fields:
+            if field not in data:
+                raise ParseError(f"Missing required field: {field}")
+        
+
+        if not isinstance(data["question"], str):
+            raise ParseError("Question must be a string")
+        
+        if not isinstance(data["expected_answer"], str):
+            raise ParseError("Expected answer must be a string")
+        
+        if not isinstance(data["difficulty"], (int, float)):
+            raise ParseError("Difficulty must be a number")
+        
+        # Validate difficulty range
+        if not 0.0 <= data["difficulty"] <= 1.0:
+            raise ParseError("Difficulty must be between 0.0 and 1.0")
+        
+        # Validate hints if present
+        if "hints" in data and not isinstance(data["hints"], list):
+            raise ParseError("Hints must be a list")
+        
+        # Validate reasoning if present
+        if "reasoning" in data and not isinstance(data["reasoning"], str):
+            raise ParseError("Reasoning must be a string")
+        
+        return data
+        
+    except json.JSONDecodeError as e:
+        raise ParseError(f"Invalid JSON format: {e}")
+    except Exception as e:
+        raise ParseError(f"Parsing error: {e}")
+
+
 def safe_parse(response: str, parser_func, *args, **kwargs) -> Dict[str, Any]:
     """
     Safely parse LLM response with fallback handling.
@@ -362,6 +424,13 @@ def _get_fallback_data(parser_name: str) -> Dict[str, Any]:
             "chosen_strategy": "direct_explanation",
             "reasoning": "Fallback to direct explanation due to parsing error",
             "confidence": 0.5
+        },
+        "parse_practice_question": {
+            "question": "What did you learn from the explanation?",
+            "expected_answer": "Student should demonstrate understanding",
+            "difficulty": 0.5,
+            "hints": [],
+            "reasoning": "Fallback question due to parsing error"
         }
     }
     

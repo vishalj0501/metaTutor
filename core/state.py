@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph
-from typing import TypedDict, List, Dict, Literal
+from typing import TypedDict, List, Dict, Literal, Any
 from pydantic import BaseModel, Field
 
 
@@ -49,6 +49,11 @@ class AgentState(TypedDict):
 
     sessions: List[LearningSession]
 
+    # teaching/practice state
+    current_explanation: str  # Current teaching explanation
+    current_question: str  # Current practice question
+    current_correct_answer: str  # Expected answer for current question
+    current_teaching_data: Dict[str, Any]  # Full teaching data from teach_node
         
     # Meta-reasoning
     stuck_counter: int  # How many times tried without progress
@@ -91,7 +96,11 @@ def create_initial_state(topic: str) -> AgentState:
         next_action="diagnose",
         goal_achieved=False,
         max_attempts=10,
-        current_attempt=0
+        current_attempt=0,
+        current_explanation="",
+        current_question="",
+        current_correct_answer="",
+        current_teaching_data={}
     )
 
 

@@ -7,7 +7,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
 
 from agents.diagnostic import adaptive_diagnostic_node, MIN_DIAGNOSTIC_CONFIDENCE, MAX_DIAGNOSTIC_QUESTIONS
 from agents.strategy_selector import strategy_selector_node
-from agents.teaching_session import teaching_session_node
+from agents.teach_node import teach_node
+from agents.practice_node import practice_node
 from agents.strategies import get_default_strategies, track_session_effectiveness
 from core.state import create_initial_state
 
@@ -161,9 +162,13 @@ def main():
         selected_strategy = state["current_strategy"]
         print(f"✅ Selected: {selected_strategy}")
         
-        # Step 2: Teaching Session
-        session_updates = teaching_session_node(state)
-        state.update(session_updates)
+
+        teach_updates = teach_node(state)
+        state.update(teach_updates)
+        
+
+        practice_updates = practice_node(state)
+        state.update(practice_updates)
         
         # Step 3: Progress Check
         current_proficiency = state.get("current_proficiency", 0.0)
