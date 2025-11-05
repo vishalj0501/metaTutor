@@ -53,6 +53,8 @@ class AgentState(TypedDict):
     current_explanation: str  # Current teaching explanation
     current_question: str  # Current practice question
     current_correct_answer: str  # Expected answer for current question
+    current_user_answer: str  # Student's answer to current question
+    current_question_difficulty: float  # Difficulty level of current question
     current_teaching_data: Dict[str, Any]  # Full teaching data from teach_node
         
     # Meta-reasoning
@@ -100,6 +102,8 @@ def create_initial_state(topic: str) -> AgentState:
         current_explanation="",
         current_question="",
         current_correct_answer="",
+        current_user_answer="",
+        current_question_difficulty=0.5,
         current_teaching_data={}
     )
 

@@ -2,15 +2,12 @@
 Practice Node
 
 This module implements the practice node that generates practice questions
-based on what was taught and evaluates student responses.
+based on what was taught and collects student responses.
 """
 
 from typing import Dict, Any
-from datetime import datetime
 
 from core.state import AgentState
-from agents.diagnostic import evaluate_answer_quality
-from agents.strategies import update_strategy_effectiveness, track_session_effectiveness
 from agents.parsers import parse_practice_question, safe_parse
 from config.prompts import PRACTICE_QUESTION_PROMPT
 from tools.llm import get_llm
@@ -18,23 +15,20 @@ from tools.llm import get_llm
 
 def practice_node(state: AgentState) -> Dict[str, Any]:
     """
-    Generate practice question and evaluate student response.
+    Generate practice question and collect student response.
     
     This node:
     1. Gets teaching content from state
     2. Generates practice question using LLM
     3. Parses the question
-    4. Gets student input
-    5. Evaluates answer using LLM
-    6. Calculates proficiency gain
-    7. Creates session record
-    8. Updates state
+    4. Displays question and gets student input
+    5. Stores question and answer in state for evaluation
     
     Args:
         state: Current agent state
         
     Returns:
-        Dictionary with state updates
+        Dictionary with state updates (question, answer, difficulty)
     """
     
     print("\n" + "="*60)
@@ -122,90 +116,16 @@ def practice_node(state: AgentState) -> Dict[str, Any]:
         print("   ⚠️  No answer provided, using empty string")
         user_answer = ""
     
-    # ===== STEP 5: Evaluate Answer =====
+    # ===== STEP 5: Return Updates =====
     
-    print(f"\n🔍 Evaluating your answer...")
-    
-    evaluation = evaluate_answer_quality(
-        question=question,
-        user_answer=user_answer,
-        expected_level=difficulty,
-        topic=topic
-    )
-    
-    session_score = evaluation["quality_score"]
-    
-    print(f"\n📊 Evaluation Results:")
-    print(f"   Score: {session_score:.2f}/1.0")
-    print(f"   Reasoning: {evaluation['reasoning']}")
-    
-    if evaluation.get('strengths'):
-        print(f"\n   ✅ Strengths:")
-        for strength in evaluation['strengths']:
-            print(f"      - {strength}")
-    
-    if evaluation.get('weaknesses'):
-        print(f"\n   ⚠️  Areas to improve:")
-        for weakness in evaluation['weaknesses']:
-            print(f"      - {weakness}")
-    
-    print(f"\n   Level indication: {evaluation.get('level_indication', 'unknown')}")
-    
-    # ===== STEP 6: Create Session Record =====
-    
-    session_id = len(state.get("sessions", [])) + 1
-    
-    # Extract explanation text for session record
-    explanation = _extract_explanation_for_session(strategy, teaching_data, current_explanation)
-    
-    session_record = {
-        "session_id": session_id,
-        "strategy": strategy,
-        "score": session_score,
-        "topic": topic,
-        "explanation": explanation,
-        "question": question,
-        "user_answer": user_answer,
-        "correct_answer": expected_answer,
-        "feedback": evaluation.get('reasoning', ''),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # ===== STEP 7: Update State =====
-    
-    new_sessions = state.get("sessions", []) + [session_record]
-    
-    # Track effectiveness
-    track_session_effectiveness(strategy, session_score, topic, student_level)
-    
-    # Update strategy effectiveness in state
-    updated_strategies = update_strategy_effectiveness(
-        state.get("available_strategies", []),
-        strategy,
-        session_score
-    )
-    
-    # Update proficiency
-    proficiency_gain = session_score * 0.1
-    new_proficiency = min(1.0, student_level + proficiency_gain)
-    
-    print(f"\n📈 Learning Progress:")
-    print(f"   Proficiency Gain: +{proficiency_gain:.2f}")
-    print(f"   New Proficiency: {new_proficiency:.2f}")
-    
-    # ===== STEP 8: Return Updates =====
-    
-    decision = f"✏️  Practice session: Score {session_score:.2f} | {'Success' if session_score >= 0.6 else 'Needs improvement'}"
+    # Store question data and user answer in state for evaluate_node
+    print(f"\n✅ Answer collected. Ready for evaluation.")
     
     return {
         "current_question": question,
         "current_correct_answer": expected_answer,
-        "sessions": new_sessions,
-        "available_strategies": updated_strategies,
-        "current_proficiency": new_proficiency,
-        "consecutive_failures": 0 if session_score >= 0.6 else state.get("consecutive_failures", 0) + 1,
-        "stuck_counter": 0 if session_score >= 0.6 else state.get("stuck_counter", 0) + 1,
-        "decision_log": state.get("decision_log", []) + [decision]
+        "current_user_answer": user_answer,
+        "current_question_difficulty": difficulty  # Store difficulty for evaluation
     }
 
 
@@ -263,38 +183,4 @@ def _create_teaching_summary(strategy: str, teaching_data: Dict[str, Any], curre
         return " | ".join(summary_parts)
     
     return current_explanation or "Teaching content provided"
-
-
-def _extract_explanation_for_session(strategy: str, teaching_data: Dict[str, Any], current_explanation: str) -> str:
-    """Extract explanation text for session record."""
-    
-    if current_explanation:
-        return current_explanation
-    
-    if not teaching_data:
-        return "Teaching content provided"
-    
-    if strategy == "direct_explanation":
-        return teaching_data.get("explanation", "Direct explanation provided")
-    
-    elif strategy == "socratic":
-        questions = teaching_data.get("questions", [])
-        if questions:
-            return f"Socratic questions: {'; '.join(questions[:2])}..."
-        return "Socratic questions provided"
-    
-    elif strategy == "worked_example":
-        problem = teaching_data.get("problem_statement", "Worked example provided")
-        return f"Worked example: {problem[:100]}..."
-    
-    elif strategy == "analogy":
-        analogy = teaching_data.get("analogy_concept", "Analogy provided")
-        return f"Analogy: {analogy}"
-    
-    elif strategy == "visual":
-        visual_type = teaching_data.get("visual_type", "Visual representation")
-        return f"Visual: {visual_type}"
-    
-    else:
-        return "Teaching content provided"
 

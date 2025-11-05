@@ -9,6 +9,7 @@ from agents.diagnostic import adaptive_diagnostic_node, MIN_DIAGNOSTIC_CONFIDENC
 from agents.strategy_selector import strategy_selector_node
 from agents.teach_node import teach_node
 from agents.practice_node import practice_node
+from agents.evaluate_node import evaluate_node
 from agents.strategies import get_default_strategies, track_session_effectiveness
 from core.state import create_initial_state
 
@@ -166,9 +167,11 @@ def main():
         teach_updates = teach_node(state)
         state.update(teach_updates)
         
-
         practice_updates = practice_node(state)
         state.update(practice_updates)
+        
+        evaluate_updates = evaluate_node(state)
+        state.update(evaluate_updates)
         
         # Step 3: Progress Check
         current_proficiency = state.get("current_proficiency", 0.0)
