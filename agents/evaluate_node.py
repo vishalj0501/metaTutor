@@ -9,8 +9,10 @@ from typing import Dict, Any
 from datetime import datetime
 
 from core.state import AgentState
-from agents.diagnostic import evaluate_answer_quality
+from agents.parsers import parse_answer_evaluation, safe_parse
 from agents.strategies import update_strategy_effectiveness, track_session_effectiveness
+from config.prompts import ANSWER_EVALUATION_PROMPT
+from tools.llm import get_llm
 
 
 def evaluate_node(state: AgentState) -> Dict[str, Any]:
@@ -68,12 +70,39 @@ def evaluate_node(state: AgentState) -> Dict[str, Any]:
     
     print(f"\n🔍 Evaluating answer using LLM...")
     
-    evaluation = evaluate_answer_quality(
+    # Format evaluation prompt
+    prompt = ANSWER_EVALUATION_PROMPT.format(
+        topic=topic,
         question=question,
-        user_answer=user_answer,
         expected_level=difficulty,
-        topic=topic
+        user_answer=user_answer
     )
+    
+    # Call LLM
+    llm = get_llm(use_mock=False)
+    response = llm.invoke(prompt)
+    
+    # Handle response format
+    if hasattr(response, 'content'):
+        response_text = response.content
+    else:
+        response_text = str(response)
+    
+    print(f"✅ LLM response received")
+    
+    # Parse evaluation response
+    print(f"\n🔍 Parsing evaluation response...")
+    
+    try:
+        evaluation = parse_answer_evaluation(response_text)
+        print(f"✅ Successfully parsed evaluation response")
+        
+    except Exception as e:
+        print(f"⚠️  Parse error: {e}")
+        print(f"   Using fallback evaluation data")
+        
+        # Use safe parser with fallback
+        evaluation = safe_parse(response_text, parse_answer_evaluation)
     
     session_score = evaluation["quality_score"]
     

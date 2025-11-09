@@ -5,94 +5,9 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 
-from agents.diagnostic import adaptive_diagnostic_node, MIN_DIAGNOSTIC_CONFIDENCE, MAX_DIAGNOSTIC_QUESTIONS
-from agents.strategy_selector import strategy_selector_node
-from agents.teach_node import teach_node
-from agents.practice_node import practice_node
-from agents.evaluate_node import evaluate_node
 from agents.strategies import get_default_strategies, track_session_effectiveness
 from core.state import create_initial_state
-
-
-def run_teaching_session(state: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Run a complete teaching session using the selected strategy.
-    
-    This simulates the teaching process and returns a session result.
-    """
-    
-    print(f"\n" + "="*60)
-    print(f"📚 TEACHING SESSION")
-    print("="*60)
-    
-    strategy = state.get("current_strategy", "direct_explanation")
-    topic = state.get("topic", "Unknown Topic")
-    
-    print(f"\n🎯 Teaching Strategy: {strategy}")
-    print(f"📖 Topic: {topic}")
-    print(f"👤 Student Level: {state.get('current_proficiency', 0.0):.2f}")
-    
-    # Simulate teaching process
-    print(f"\n📝 Teaching Process:")
-    print(f"   1. Generating explanation using {strategy} approach...")
-    print(f"   2. Creating assessment question...")
-    print(f"   3. Evaluating student response...")
-    
-    # Simulate session score (this would come from actual teaching)
-    # For demo, we'll use a simple simulation
-    base_score = 0.7
-    strategy_bonus = {
-        "direct_explanation": 0.0,
-        "socratic": 0.1,
-        "worked_example": 0.15,
-        "analogy": 0.05,
-        "visual": 0.1
-    }.get(strategy, 0.0)
-    
-    level_factor = 1.0 - (state.get("current_proficiency", 0.5) * 0.3)
-    simulated_score = min(1.0, base_score + strategy_bonus + level_factor)
-    
-    print(f"   4. Session Score: {simulated_score:.2f}")
-    
-    # Create session record
-    session = {
-        "session_id": len(state.get("sessions", [])) + 1,
-        "strategy": strategy,
-        "score": simulated_score,
-        "topic": topic,
-        "explanation": f"Explanation using {strategy} for {topic}",
-        "question": f"What is the key concept of {topic}?",
-        "user_answer": "Student provided answer",
-        "correct_answer": "Correct answer",
-        "feedback": f"Feedback based on {strategy} approach",
-        "timestamp": "2024-01-01T10:00:00"
-    }
-    
-    # Update state
-    new_sessions = state.get("sessions", []) + [session]
-    
-    # Track effectiveness
-    track_session_effectiveness(
-        strategy, 
-        simulated_score, 
-        topic, 
-        state.get("current_proficiency", 0.5)
-    )
-    
-    # Update proficiency
-    proficiency_gain = simulated_score * 0.1
-    new_proficiency = min(1.0, state.get("current_proficiency", 0.0) + proficiency_gain)
-    
-    print(f"\n📈 Learning Progress:")
-    print(f"   Proficiency Gain: +{proficiency_gain:.2f}")
-    print(f"   New Proficiency: {new_proficiency:.2f}")
-    
-    return {
-        "sessions": new_sessions,
-        "current_proficiency": new_proficiency,
-        "consecutive_failures": 0 if simulated_score >= 0.6 else state.get("consecutive_failures", 0) + 1,
-        "stuck_counter": 0 if simulated_score >= 0.6 else state.get("stuck_counter", 0) + 1
-    }
+from core.graph import build_teaching_graph
 
 
 def main():
@@ -116,86 +31,43 @@ def main():
     print(f"📊 Target Proficiency: {state['target_proficiency']:.1f}")
     print(f"🔄 Max Attempts: {state['max_attempts']}")
     
-    # Phase 1: Diagnostic
+    # Build and run LangGraph workflow
     print(f"\n" + "="*60)
-    print(f"🔍 PHASE 1: DIAGNOSTIC ASSESSMENT")
+    print(f"🚀 Starting LangGraph Workflow")
     print("="*60)
     
-    diagnostic_complete = False
-    while not diagnostic_complete:
-        updates = adaptive_diagnostic_node(state)
-        state.update(updates)
-
-        confidence = state.get("diagnostic_confidence", 0.0)
-        num_questions = len(state.get("diagnostic_questions", []))
-
-        if confidence >= MIN_DIAGNOSTIC_CONFIDENCE or num_questions >= MAX_DIAGNOSTIC_QUESTIONS:
-            diagnostic_complete = True
-            print(f"\n✅ Diagnostic completed.")
-            print(f"   Estimated Level: {state.get('estimated_level', 0.0):.2f}")
-            print(f"   Confidence: {confidence:.2f}")
-            
-            # Set initial proficiency based on diagnostic
-            state["current_proficiency"] = state.get("estimated_level", 0.2)
+    graph = build_teaching_graph()
     
-    # Phase 2: Adaptive Teaching
+    # Run the workflow
+    print(f"\n▶️  Executing workflow...")
+    final_state = graph.invoke(state)
+    
+    # Handle final state and display results
+    next_action = final_state.get("next_action", "unknown")
+    goal_achieved = final_state.get("goal_achieved", False)
+    
     print(f"\n" + "="*60)
-    print(f"📚 PHASE 2: ADAPTIVE TEACHING")
+    print(f"🏁 Workflow Completed")
     print("="*60)
     
-    session_count = 0
-    max_sessions = 8
+    if goal_achieved or next_action == "end_success":
+        print(f"\n🎉 LEARNING GOAL ACHIEVED!")
+        print(f"   Student has reached target proficiency!")
+    elif next_action == "end_max_attempts":
+        print(f"\n⏸️  Max attempts reached. Ending session.")
+    elif next_action == "end_stuck":
+        print(f"\n⚠️  Student appears stuck. Ending session.")
+        print(f"   Consider reviewing prerequisite knowledge or trying a different approach.")
+    elif next_action == "prerequisite":
+        prerequisite_topic = final_state.get("prerequisite_topic", "")
+        if prerequisite_topic:
+            print(f"\n📚 Prerequisite needed: {prerequisite_topic}")
+            print(f"   Consider learning {prerequisite_topic} first before continuing with {topic}")
+    else:
+        print(f"\n⏸️  Workflow ended with action: {next_action}")
     
-    while (session_count < max_sessions and 
-           state.get("current_proficiency", 0.0) < state.get("target_proficiency", 0.8) and
-           state.get("current_attempt", 0) < state.get("max_attempts", 10)):
-        
-        session_count += 1
-        state["current_attempt"] = state.get("current_attempt", 0) + 1
-        
-        print(f"\n--- Session {session_count} ---")
-        
-        # Step 1: Strategy Selection
-        print(f"\n🤔 Agent selecting teaching strategy...")
-        updates = strategy_selector_node(state)
-        state.update(updates)
-        
-        selected_strategy = state["current_strategy"]
-        print(f"✅ Selected: {selected_strategy}")
-        
-
-        teach_updates = teach_node(state)
-        state.update(teach_updates)
-        
-        practice_updates = practice_node(state)
-        state.update(practice_updates)
-        
-        evaluate_updates = evaluate_node(state)
-        state.update(evaluate_updates)
-        
-        # Step 3: Progress Check
-        current_proficiency = state.get("current_proficiency", 0.0)
-        target_proficiency = state.get("target_proficiency", 0.8)
-        
-        print(f"\n📊 Progress Update:")
-        print(f"   Current Proficiency: {current_proficiency:.2f}")
-        print(f"   Target Proficiency: {target_proficiency:.2f}")
-        print(f"   Progress: {(current_proficiency/target_proficiency)*100:.1f}%")
-        
-        if current_proficiency >= target_proficiency:
-            print(f"\n🎉 LEARNING GOAL ACHIEVED!")
-            print(f"   Student has reached target proficiency!")
-            break
-        
-        # Check if stuck
-        consecutive_failures = state.get("consecutive_failures", 0)
-        if consecutive_failures >= 3:
-            print(f"\n⚠️  Student appears stuck ({consecutive_failures} consecutive failures)")
-            print(f"   Agent will try different approaches...")
-        
-        # Pause for user input
-        if session_count < max_sessions:
-            input(f"\n⏸️  Press Enter to continue to next session...")
+    # Update state reference for summary
+    state = final_state
     
     # Final Summary
     print(f"\n" + "="*80)

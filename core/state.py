@@ -26,7 +26,12 @@ class AgentState(TypedDict):
     target_score: float 
 
     # diagnotics
-
+    diagnostic_confidence: float
+    diagnostic_questions: List[str]
+    diagnostic_answers: List[str]
+    estimated_level: float
+    
+    # Legacy/deprecated (kept for compatibility)
     current_level: float
     current_confidence: float
     current_questions: List[str]
@@ -79,6 +84,10 @@ def create_initial_state(topic: str) -> AgentState:
     return AgentState(
         topic=topic,
         target_score=0.8,
+        diagnostic_confidence=0.0,
+        diagnostic_questions=[],
+        diagnostic_answers=[],
+        estimated_level=0.2,
         current_level=0.0,
         current_confidence=0.0,
         current_questions=[],
