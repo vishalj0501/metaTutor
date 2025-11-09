@@ -222,3 +222,65 @@ Return JSON:
     "reasoning": "detailed explanation of why this choice makes sense",
     "confidence": 0.X
 }}"""
+
+# ============================================================================
+# META-REASONER PROMPT
+# ============================================================================
+
+META_REASONER_PROMPT = """You are a meta-learning agent analyzing the overall learning progress and deciding what action to take next.
+
+Topic: {topic}
+Learning Goal: {learning_goal}
+
+Current State:
+- Current Proficiency: {current_proficiency:.2f}/1.0
+- Target Proficiency: {target_proficiency:.2f}/1.0
+- Progress: {progress_percentage:.1f}%
+- Current Attempt: {current_attempt}/{max_attempts}
+- Consecutive Failures: {consecutive_failures}
+- Stuck Counter: {stuck_counter}
+- Total Sessions: {total_sessions}
+
+Recent Performance:
+{recent_summary}
+
+Performance Metrics:
+- Average Recent Score: {avg_recent_score:.2f}
+- Trend: {trend}
+- Progress Rate: {progress_rate:.3f} per attempt
+
+DECISION CRITERIA:
+
+1. **CONTINUE** - Keep teaching if:
+   - Current proficiency < target proficiency AND
+   - Current attempt < max attempts AND
+   - (Making progress OR not stuck) AND
+   - Not consistently failing
+
+2. **END_SUCCESS** - Goal achieved if:
+   - Current proficiency >= target proficiency
+
+3. **END_MAX_ATTEMPTS** - Max attempts reached if:
+   - Current attempt >= max attempts
+
+4. **END_STUCK** - Student stuck if:
+   - Consecutive failures >= 3 AND
+   - No progress (proficiency not increasing) AND
+   - Tried multiple strategies without success
+
+5. **PREREQUISITE** - Need prerequisite if:
+   - Student consistently struggling (scores < 0.4) AND
+   - No progress despite multiple attempts AND
+   - Topic likely requires foundational knowledge
+
+Based on the above analysis, what should we do NEXT?
+
+Return JSON format:
+{{
+    "next_action": "continue|end_success|end_max_attempts|end_stuck|prerequisite",
+    "goal_achieved": true/false,
+    "needs_prerequisite": true/false,
+    "prerequisite_topic": "topic name or empty string",
+    "reasoning": "detailed explanation of why this decision makes sense",
+    "confidence": 0.X
+}}"""

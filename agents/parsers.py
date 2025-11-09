@@ -90,7 +90,8 @@ def parse_answer_evaluation(response: str) -> Dict[str, Any]:
         ParseError: If parsing fails
     """
     try:
-        data = json.loads(response)
+        cleaned = _extract_json_string(response)
+        data = json.loads(cleaned)
         
         # Validate required fields
         required_fields = ["quality_score", "reasoning", "strengths", "weaknesses", "level_indication"]
@@ -118,10 +119,32 @@ def parse_answer_evaluation(response: str) -> Dict[str, Any]:
         if not 0.0 <= data["quality_score"] <= 1.0:
             raise ParseError("Quality score must be between 0.0 and 1.0")
         
-        # Validate level_indication values
+        # Validate level_indication values (case-insensitive, handle variations)
         valid_levels = ["beginner", "intermediate", "advanced"]
-        if data["level_indication"].lower() not in valid_levels:
-            raise ParseError(f"Level indication must be one of: {valid_levels}")
+        level_lower = data["level_indication"].lower().strip()
+        
+        # Map common variations to valid levels
+        level_mapping = {
+            "beginner": "beginner",
+            "novice": "beginner",
+            "basic": "beginner",
+            "elementary": "beginner",
+            "intermediate": "intermediate",
+            "medium": "intermediate",
+            "moderate": "intermediate",
+            "advanced": "advanced",
+            "expert": "advanced",
+            "proficient": "advanced"
+        }
+        
+        # Normalize the level indication
+        normalized_level = level_mapping.get(level_lower, level_lower)
+        
+        if normalized_level not in valid_levels:
+            # If still not valid, default to intermediate
+            normalized_level = "intermediate"
+        
+        data["level_indication"] = normalized_level
         
         return data
         
@@ -382,6 +405,84 @@ def parse_practice_question(response: str) -> Dict[str, Any]:
         raise ParseError(f"Parsing error: {e}")
 
 
+def parse_meta_reasoner_decision(response: str) -> Dict[str, Any]:
+    """
+    Parse meta-reasoner decision response from LLM.
+    
+    Expected JSON format:
+    {
+        "next_action": "continue|end_success|end_max_attempts|end_stuck|prerequisite",
+        "goal_achieved": true/false,
+        "needs_prerequisite": true/false,
+        "prerequisite_topic": "topic name or empty string",
+        "reasoning": "detailed explanation",
+        "confidence": 0.X
+    }
+    
+    Args:
+        response: Raw LLM response string
+        
+    Returns:
+        Parsed meta-reasoner decision data
+        
+    Raises:
+        ParseError: If parsing fails
+    """
+    try:
+        cleaned = _extract_json_string(response)
+        data = json.loads(cleaned)
+        
+        # Validate required fields
+        required_fields = ["next_action", "goal_achieved", "needs_prerequisite", "reasoning"]
+        for field in required_fields:
+            if field not in data:
+                raise ParseError(f"Missing required field: {field}")
+        
+        # Validate types
+        if not isinstance(data["next_action"], str):
+            raise ParseError("Next action must be a string")
+        
+        if not isinstance(data["goal_achieved"], bool):
+            raise ParseError("Goal achieved must be a boolean")
+        
+        if not isinstance(data["needs_prerequisite"], bool):
+            raise ParseError("Needs prerequisite must be a boolean")
+        
+        if not isinstance(data["reasoning"], str):
+            raise ParseError("Reasoning must be a string")
+        
+        # Validate next_action values
+        valid_actions = ["continue", "end_success", "end_max_attempts", "end_stuck", "prerequisite"]
+        if data["next_action"] not in valid_actions:
+            raise ParseError(f"Next action must be one of: {valid_actions}")
+        
+        # Validate prerequisite_topic if needs_prerequisite is True
+        if data["needs_prerequisite"]:
+            if "prerequisite_topic" not in data:
+                raise ParseError("Prerequisite topic required when needs_prerequisite is True")
+            if not isinstance(data["prerequisite_topic"], str):
+                raise ParseError("Prerequisite topic must be a string")
+        else:
+            # Set empty string if not needed
+            data["prerequisite_topic"] = data.get("prerequisite_topic", "")
+        
+        # Validate confidence if present
+        if "confidence" in data:
+            if not isinstance(data["confidence"], (int, float)):
+                raise ParseError("Confidence must be a number")
+            if not 0.0 <= data["confidence"] <= 1.0:
+                raise ParseError("Confidence must be between 0.0 and 1.0")
+        else:
+            data["confidence"] = 0.7  # Default confidence
+        
+        return data
+        
+    except json.JSONDecodeError as e:
+        raise ParseError(f"Invalid JSON format: {e}")
+    except Exception as e:
+        raise ParseError(f"Parsing error: {e}")
+
+
 def safe_parse(response: str, parser_func, *args, **kwargs) -> Dict[str, Any]:
     """
     Safely parse LLM response with fallback handling.
@@ -431,6 +532,14 @@ def _get_fallback_data(parser_name: str) -> Dict[str, Any]:
             "difficulty": 0.5,
             "hints": [],
             "reasoning": "Fallback question due to parsing error"
+        },
+        "parse_meta_reasoner_decision": {
+            "next_action": "continue",
+            "goal_achieved": False,
+            "needs_prerequisite": False,
+            "prerequisite_topic": "",
+            "reasoning": "Fallback decision: continue teaching",
+            "confidence": 0.5
         }
     }
     
