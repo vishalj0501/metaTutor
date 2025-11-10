@@ -7,7 +7,7 @@ from agents.strategies import (
     rank_strategies,
     get_strategy_selection_prompt
 )
-from agents.parsers import parse_strategy_selection
+from config.parsers import parse_strategy_selection
 from tools.llm import get_llm
 
 

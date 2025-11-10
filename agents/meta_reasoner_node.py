@@ -8,7 +8,7 @@ and makes intelligent decisions about what action to take next.
 from typing import Dict, Any
 
 from core.state import AgentState
-from agents.parsers import parse_meta_reasoner_decision, safe_parse
+from config.parsers import parse_meta_reasoner_decision, safe_parse
 from config.prompts import META_REASONER_PROMPT
 from tools.llm import get_llm
 

@@ -8,7 +8,7 @@ based on what was taught and collects student responses.
 from typing import Dict, Any
 
 from core.state import AgentState
-from agents.parsers import parse_practice_question, safe_parse
+from config.parsers import parse_practice_question, safe_parse
 from config.prompts import PRACTICE_QUESTION_PROMPT
 from tools.llm import get_llm
 

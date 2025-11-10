@@ -10,7 +10,7 @@ import random
 
 from core.state import AgentState
 from agents.strategies import get_strategy_prompt, update_strategy_effectiveness, track_session_effectiveness
-from agents.parsers import parse_teaching_response, safe_parse
+from config.parsers import parse_teaching_response, safe_parse
 from tools.llm import get_llm
 
 
