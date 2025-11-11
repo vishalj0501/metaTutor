@@ -185,6 +185,9 @@ def evaluate_node(state: AgentState) -> Dict[str, Any]:
     consecutive_failures = 0 if is_success else state.get("consecutive_failures", 0) + 1
     stuck_counter = 0 if is_success else state.get("stuck_counter", 0) + 1
     
+    # Increment attempt counter after each session
+    current_attempt = state.get("current_attempt", 0) + 1
+    
     decision = (
         f"📊 Evaluation: Score {session_score:.2f} | "
         f"{'Success' if is_success else 'Needs improvement'} | "
@@ -197,6 +200,7 @@ def evaluate_node(state: AgentState) -> Dict[str, Any]:
         "current_proficiency": new_proficiency,
         "consecutive_failures": consecutive_failures,
         "stuck_counter": stuck_counter,
+        "current_attempt": current_attempt,
         "decision_log": state.get("decision_log", []) + [decision]
     }
 

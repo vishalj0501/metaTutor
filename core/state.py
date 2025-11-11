@@ -83,7 +83,7 @@ def create_initial_state(topic: str) -> AgentState:
     """
     return AgentState(
         topic=topic,
-        target_score=0.8,
+        target_score=0.6,
         diagnostic_confidence=0.0,
         diagnostic_questions=[],
         diagnostic_answers=[],
@@ -98,7 +98,7 @@ def create_initial_state(topic: str) -> AgentState:
         available_strategies=[],
         strategy_attempts={},
         consecutive_failures=0,
-        target_proficiency=0.8,
+        target_proficiency=0.6,
         sessions=[],
         stuck_counter=0,
         needs_prerequisite=False,

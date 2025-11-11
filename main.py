@@ -38,9 +38,9 @@ def main():
     
     graph = build_teaching_graph()
     
-    # Run the workflow
+    # Run the workflow with recursion limit to prevent infinite loops
     print(f"\n▶️  Executing workflow...")
-    final_state = graph.invoke(state)
+    final_state = graph.invoke(state, config={"recursion_limit": 500})
     
     # Handle final state and display results
     next_action = final_state.get("next_action", "unknown")

@@ -101,10 +101,23 @@ def route_decision(state: AgentState) -> str:
     
     next_action = state.get("next_action", "continue")
     goal_achieved = state.get("goal_achieved", False)
+    current_attempt = state.get("current_attempt", 0)
+    max_attempts = state.get("max_attempts", 10)
     
     print(f"\n🔄 Routing Decision:")
     print(f"   Next Action: {next_action}")
     print(f"   Goal Achieved: {goal_achieved}")
+    print(f"   Attempt: {current_attempt}/{max_attempts}")
+    
+    # Safety check: stop if max attempts reached, even if meta-reasoner says continue
+    if current_attempt >= max_attempts:
+        print(f"   ⚠️  Max attempts reached! Forcing end.")
+        return "end"
+    
+    # Safety check: stop if goal achieved, even if meta-reasoner says continue
+    if goal_achieved:
+        print(f"   ✅ Goal achieved! Forcing end.")
+        return "end"
     
     if next_action == "continue" and not goal_achieved:
         print(f"   → Routing to: strategy_selector (continue teaching)")

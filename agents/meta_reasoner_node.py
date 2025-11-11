@@ -13,7 +13,7 @@ from config.prompts import META_REASONER_PROMPT
 from tools.llm import get_llm
 
 
-def meta_reasoner_node(state: AgentState) -> Dict[str, Any]:
+def meta_reasoner_node( state: AgentState) -> Dict[str, Any]:
     """
     Analyze learning progress and decide next action.
     
