@@ -1,0 +1,25 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	diagnostic_phase(diagnostic_phase)
+	strategy_selector(strategy_selector)
+	teach(teach)
+	practice(practice)
+	evaluate(evaluate)
+	meta_reasoner(meta_reasoner)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> diagnostic_phase;
+	diagnostic_phase --> strategy_selector;
+	evaluate --> meta_reasoner;
+	meta_reasoner -. &nbsp;end&nbsp; .-> __end__;
+	meta_reasoner -.-> strategy_selector;
+	practice --> evaluate;
+	strategy_selector --> teach;
+	teach --> practice;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
