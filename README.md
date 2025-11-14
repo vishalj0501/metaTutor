@@ -112,7 +112,7 @@ The workflow loops back to **Strategy Selector** if continuing, or ends if the g
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone [<repository-url>](https://github.com/vishalj0501/teachagent)
    cd teachagent
    ```
 
