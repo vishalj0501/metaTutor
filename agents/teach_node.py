@@ -25,63 +25,48 @@ def teach_node(state: AgentState) -> Dict[str, Any]:
     """
     
     print("\n" + "="*60)
-    print("📚 TEACH NODE")
+    print("Teach Node")
     print("="*60)
-    
-    # ===== STEP 1: Extract Context =====
     
     strategy = state.get("current_strategy", "direct_explanation")
     topic = state.get("topic", "Unknown Topic")
     student_level = state.get("current_proficiency", 0.5)
     
-    print(f"\n🎯 Teaching Strategy: {strategy}")
-    print(f"📖 Topic: {topic}")
-    print(f"👤 Student Level: {student_level:.2f}")
+    print(f"\nTeaching Strategy: {strategy}")
+    print(f"Topic: {topic}")
+    print(f"Student Level: {student_level:.2f}")
     
-    # ===== STEP 2: Generate Teaching Content =====
+    print(f"\nGenerating teaching content...")
     
-    print(f"\n🤖 Generating teaching content...")
-    
-    # Get strategy-specific prompt
     prompt = get_strategy_prompt(strategy, topic, student_level)
     
-    # Call LLM
     llm = get_llm(use_mock=False)
     response = llm.invoke(prompt)
     
-    # Handle response format
     if hasattr(response, 'content'):
         response_text = response.content
     else:
         response_text = str(response)
     
-    print(f"✅ LLM response received")
+    print(f"LLM response received")
     
-    # ===== STEP 3: Parse Teaching Response =====
-    
-    print(f"\n🔍 Parsing teaching response...")
+    print(f"\nParsing teaching response...")
     
     try:
         teaching_data = parse_teaching_response(response_text, strategy)
-        print(f"✅ Successfully parsed {strategy} response")
-        
-        # Display teaching content based on strategy
+        print(f"Successfully parsed {strategy} response")
+
         _display_teaching_content(strategy, teaching_data)
         
     except Exception as e:
-        print(f"⚠️  Parse error: {e}")
+        print(f"Parse error: {e}")
         print(f"   Using fallback teaching data")
         
-        # Use safe parser with fallback
         teaching_data = safe_parse(response_text, parse_teaching_response, strategy)
-    
-    # ===== STEP 4: Extract Explanation =====
     
     explanation = _extract_explanation(strategy, teaching_data)
     
-    # ===== STEP 5: Return State Updates =====
-    
-    decision = f"🎓 Taught {topic} using {strategy} strategy"
+    decision = f"Taught {topic} using {strategy} strategy"
     
     return {
         "current_explanation": explanation,
@@ -91,9 +76,7 @@ def teach_node(state: AgentState) -> Dict[str, Any]:
 
 
 def _display_teaching_content(strategy: str, teaching_data: Dict[str, Any]):
-    """Display teaching content based on strategy type."""
-    
-    print(f"\n📝 Teaching Content ({strategy}):")
+    print(f"\nTeaching Content ({strategy}):")
     
     if strategy == "direct_explanation":
         explanation = teaching_data.get('explanation', 'N/A')
@@ -165,9 +148,7 @@ def _display_teaching_content(strategy: str, teaching_data: Dict[str, Any]):
             print(f"\n   Connections: {connections}")
 
 
-def _extract_explanation(strategy: str, teaching_data: Dict[str, Any]) -> str:
-    """Extract explanation text based on strategy type."""
-    
+def _extract_explanation(strategy: str, teaching_data: Dict[str, Any]) -> str:        
     if strategy == "direct_explanation":
         return teaching_data.get("explanation", "Direct explanation provided")
     

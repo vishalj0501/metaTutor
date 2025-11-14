@@ -240,7 +240,7 @@ if __name__ == "__main__":
     # Get default strategies
     strategies = get_default_strategies()
     
-    print(f"\n📚 Available Strategies ({len(strategies)}):")
+    print(f"\nAvailable Strategies ({len(strategies)}):")
     for s in strategies:
         print(f"\n  {s['name']}:")
         print(f"    {s['description'][:60]}...")
@@ -252,14 +252,14 @@ if __name__ == "__main__":
     print("="*70)
     
     # Session 1: Direct explanation works well
-    print("\n📖 Session 1: Using 'direct_explanation', score: 0.9")
+    print("\nSession 1: Using 'direct_explanation', score: 0.9")
     strategies = update_strategy_effectiveness(strategies, "direct_explanation", 0.9)
     
     direct_strat = [s for s in strategies if s["name"] == "direct_explanation"][0]
     print(f"   Updated effectiveness: {direct_strat['effectiveness']:.2f}")
     
     # Session 2: Socratic fails
-    print("\n📖 Session 2: Using 'socratic', score: 0.3")
+    print("\nSession 2: Using 'socratic', score: 0.3")
     strategies = update_strategy_effectiveness(strategies, "socratic", 0.3)
     
     socratic_strat = [s for s in strategies if s["name"] == "socratic"][0]
@@ -277,33 +277,14 @@ if __name__ == "__main__":
 
 
 class StrategyEffectivenessTracker:
-    """
-    Advanced tracking system for strategy effectiveness.
-    
-    Features:
-    - Session-by-session tracking
-    - Performance analytics
-    - Trend analysis
-    - Context-aware effectiveness
-    """
-    
+        
     def __init__(self):
         self.session_history: List[Dict[str, Any]] = []
         self.strategy_stats: Dict[str, Dict[str, Any]] = {}
     
     def record_session(self, strategy_name: str, score: float, topic: str, 
                       user_level: float, session_context: Dict[str, Any] = None):
-        """
-        Record a teaching session result.
-        
-        Args:
-            strategy_name: Which strategy was used
-            score: Session effectiveness score (0.0 to 1.0)
-            topic: What was taught
-            user_level: Student's proficiency level
-            session_context: Additional context (difficulty, time, etc.)
-        """
-        
+                
         session_record = {
             "timestamp": datetime.now().isoformat(),
             "strategy": strategy_name,
@@ -315,7 +296,6 @@ class StrategyEffectivenessTracker:
         
         self.session_history.append(session_record)
         
-        # Update strategy statistics
         if strategy_name not in self.strategy_stats:
             self.strategy_stats[strategy_name] = {
                 "total_sessions": 0,
@@ -336,12 +316,10 @@ class StrategyEffectivenessTracker:
         stats["best_score"] = max(stats["best_score"], score)
         stats["worst_score"] = min(stats["worst_score"], score)
         
-        # Track recent trend (last 5 sessions)
         stats["recent_trend"].append(score)
         if len(stats["recent_trend"]) > 5:
             stats["recent_trend"].pop(0)
         
-        # Track topic-specific performance
         if topic not in stats["topic_performance"]:
             stats["topic_performance"][topic] = {"scores": [], "avg": 0.0}
         
@@ -349,7 +327,6 @@ class StrategyEffectivenessTracker:
         topic_stats["scores"].append(score)
         topic_stats["avg"] = sum(topic_stats["scores"]) / len(topic_stats["scores"])
         
-        # Track level-specific performance
         level_bucket = self._get_level_bucket(user_level)
         if level_bucket not in stats["level_performance"]:
             stats["level_performance"][level_bucket] = {"scores": [], "avg": 0.0}
@@ -358,13 +335,11 @@ class StrategyEffectivenessTracker:
         level_stats["scores"].append(score)
         level_stats["avg"] = sum(level_stats["scores"]) / len(level_stats["scores"])
         
-        # Calculate success rate (scores >= 0.7)
         successful_sessions = sum(1 for s in self.session_history 
                                 if s["strategy"] == strategy_name and s["score"] >= 0.7)
         stats["success_rate"] = successful_sessions / stats["total_sessions"]
     
     def _get_level_bucket(self, level: float) -> str:
-        """Convert numeric level to bucket for analysis."""
         if level < 0.2:
             return "beginner"
         elif level < 0.5:
@@ -375,51 +350,32 @@ class StrategyEffectivenessTracker:
             return "expert"
     
     def get_strategy_effectiveness(self, strategy_name: str, context: Dict[str, Any] = None) -> float:
-        """
-        Get effectiveness score for a strategy, considering context.
-        
-        Args:
-            strategy_name: Strategy to analyze
-            context: Current context (topic, user_level, etc.)
-        
-        Returns:
-            Effectiveness score (0.0 to 1.0)
-        """
-        
+
         if strategy_name not in self.strategy_stats:
-            return 0.7  # Default neutral score
+            return 0.7
         
         stats = self.strategy_stats[strategy_name]
         base_effectiveness = stats["avg_score"]
         
-        # Context adjustments
         if context:
-            # Topic-specific adjustment
             topic = context.get("topic")
             if topic and topic in stats["topic_performance"]:
                 topic_avg = stats["topic_performance"][topic]["avg"]
                 base_effectiveness = (base_effectiveness + topic_avg) / 2
             
-            # Level-specific adjustment
             user_level = context.get("user_level", 0.5)
             level_bucket = self._get_level_bucket(user_level)
             if level_bucket in stats["level_performance"]:
                 level_avg = stats["level_performance"][level_bucket]["avg"]
                 base_effectiveness = (base_effectiveness + level_avg) / 2
         
-        # Recent trend adjustment
         if stats["recent_trend"]:
             recent_avg = sum(stats["recent_trend"]) / len(stats["recent_trend"])
-            # Weight recent performance more heavily
             base_effectiveness = (base_effectiveness * 0.7) + (recent_avg * 0.3)
         
         return max(0.0, min(1.0, base_effectiveness))
     
     def get_strategy_analytics(self, strategy_name: str) -> Dict[str, Any]:
-        """
-        Get comprehensive analytics for a strategy.
-        """
-        
         if strategy_name not in self.strategy_stats:
             return {"error": "Strategy not found"}
         
@@ -444,20 +400,12 @@ class StrategyEffectivenessTracker:
         }
     
     def get_all_analytics(self) -> Dict[str, Any]:
-        """
-        Get analytics for all strategies.
-        """
-        
         return {
             strategy: self.get_strategy_analytics(strategy)
             for strategy in self.strategy_stats.keys()
         }
     
     def export_data(self, filename: str = None) -> str:
-        """
-        Export tracking data to JSON file.
-        """
-        
         if not filename:
             filename = f"strategy_tracking_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         
@@ -473,10 +421,6 @@ class StrategyEffectivenessTracker:
         return filename
     
     def load_data(self, filename: str):
-        """
-        Load tracking data from JSON file.
-        """
-        
         with open(filename, 'r') as f:
             data = json.load(f)
         
@@ -484,31 +428,17 @@ class StrategyEffectivenessTracker:
         self.strategy_stats = data.get("strategy_stats", {})
 
 
-# Global tracker instance
 effectiveness_tracker = StrategyEffectivenessTracker()
 
 
 def track_session_effectiveness(strategy_name: str, score: float, topic: str, 
                                user_level: float, context: Dict[str, Any] = None):
-    """
-    Convenience function to track session effectiveness.
-    """
     effectiveness_tracker.record_session(strategy_name, score, topic, user_level, context)
 
 
 def get_contextual_effectiveness(strategies: List[TeachingStrategy], 
                                 context: Dict[str, Any] = None) -> List[TeachingStrategy]:
-    """
-    Update strategy effectiveness scores based on current context.
-    
-    Args:
-        strategies: List of strategies to update
-        context: Current learning context
-    
-    Returns:
-        Updated strategies with contextual effectiveness scores
-    """
-    
+        
     updated_strategies = []
     
     for strategy in strategies:

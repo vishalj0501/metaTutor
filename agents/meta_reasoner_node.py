@@ -1,10 +1,3 @@
-"""
-Meta-Reasoner Node
-
-This module implements the meta-reasoner node that analyzes learning progress
-and makes intelligent decisions about what action to take next.
-"""
-
 from typing import Dict, Any
 
 from core.state import AgentState
@@ -38,10 +31,8 @@ def meta_reasoner_node( state: AgentState) -> Dict[str, Any]:
     """
     
     print("\n" + "="*60)
-    print("🧠 META-REASONER NODE")
+    print("Meta-Reasoner Node")
     print("="*60)
-    
-    # ===== STEP 1: Extract Context =====
     
     topic = state.get("topic", "Unknown Topic")
     learning_goal = state.get("learning_goal", f"Master {topic}")
@@ -54,7 +45,7 @@ def meta_reasoner_node( state: AgentState) -> Dict[str, Any]:
     sessions = state.get("sessions", [])
     total_sessions = len(sessions)
     
-    print(f"\n📊 Current State:")
+    print(f"\nCurrent State:")
     print(f"   Topic: {topic}")
     print(f"   Current Proficiency: {current_proficiency:.2f}")
     print(f"   Target Proficiency: {target_proficiency:.2f}")
@@ -64,45 +55,33 @@ def meta_reasoner_node( state: AgentState) -> Dict[str, Any]:
     print(f"   Stuck Counter: {stuck_counter}")
     print(f"   Total Sessions: {total_sessions}")
     
-    # ===== STEP 2: Build Context Summary =====
-    
-    # Calculate progress percentage
     progress_percentage = (current_proficiency / target_proficiency * 100) if target_proficiency > 0 else 0.0
     
-    # Analyze recent performance (last 3-5 sessions)
     recent_sessions = sessions[-5:] if len(sessions) >= 5 else sessions
     recent_summary = _build_recent_summary(recent_sessions)
     
-    # Calculate average recent score
     if recent_sessions:
         avg_recent_score = sum(s["score"] for s in recent_sessions) / len(recent_sessions)
     else:
         avg_recent_score = 0.5
     
-    # Determine trend
     trend = _calculate_trend(recent_sessions)
     
-    # Calculate progress rate (proficiency gain per attempt)
     if total_sessions > 0:
-        # Use estimated_level from diagnostic as initial, or 0.0 if not available
         initial_proficiency = state.get("estimated_level", 0.0)
         if total_sessions == 1:
-            # First session, use estimated_level as baseline
             progress_rate = (current_proficiency - initial_proficiency) / 1.0
         else:
-            # Multiple sessions, calculate average gain per session
             progress_rate = (current_proficiency - initial_proficiency) / total_sessions
     else:
         progress_rate = 0.0
     
-    print(f"\n📈 Performance Analysis:")
+    print(f"\nPerformance Analysis:")
     print(f"   Average Recent Score: {avg_recent_score:.2f}")
     print(f"   Trend: {trend}")
     print(f"   Progress Rate: {progress_rate:.3f} per session")
     
-    # ===== STEP 3: Call LLM for Decision =====
-    
-    print(f"\n🤖 Meta-reasoning about next action...")
+    print(f"\nMeta-reasoning about next action...")
     
     prompt = META_REASONER_PROMPT.format(
         topic=topic,
@@ -121,31 +100,26 @@ def meta_reasoner_node( state: AgentState) -> Dict[str, Any]:
         progress_rate=progress_rate
     )
     
-    # Call LLM
     llm = get_llm(use_mock=False)
     response = llm.invoke(prompt)
     
-    # Handle response format
     if hasattr(response, 'content'):
         response_text = response.content
     else:
         response_text = str(response)
     
-    print(f"✅ LLM response received")
+    print(f"LLM response received")
     
-    # ===== STEP 4: Parse Decision Response =====
-    
-    print(f"\n🔍 Parsing meta-reasoner decision...")
+    print(f"\nParsing meta-reasoner decision...")
     
     try:
         decision_data = parse_meta_reasoner_decision(response_text)
-        print(f"✅ Successfully parsed decision")
+        print(f"Successfully parsed decision")
         
     except Exception as e:
-        print(f"⚠️  Parse error: {e}")
+        print(f"Parse error: {e}")
         print(f"   Using fallback decision")
         
-        # Use safe parser with fallback
         decision_data = safe_parse(response_text, parse_meta_reasoner_decision)
     
     next_action = decision_data["next_action"]
@@ -155,22 +129,18 @@ def meta_reasoner_node( state: AgentState) -> Dict[str, Any]:
     reasoning = decision_data["reasoning"]
     confidence = decision_data.get("confidence", 0.7)
     
-    # ===== STEP 5: Display Decision =====
-    
-    print(f"\n🎯 Meta-Reasoner Decision:")
+    print(f"\nMeta-Reasoner Decision:")
     print(f"   Next Action: {next_action}")
     print(f"   Goal Achieved: {goal_achieved}")
     print(f"   Confidence: {confidence:.2f}")
     print(f"   Reasoning: {reasoning}")
     
     if needs_prerequisite and prerequisite_topic:
-        print(f"\n   📚 Prerequisite Needed: {prerequisite_topic}")
-    
-    # ===== STEP 6: Update State =====
-    
+        print(f"\n   Prerequisite Needed: {prerequisite_topic}")
+
     decision = (
         f"🧠 Meta-Reasoner: {next_action.upper()} | "
-        f"Goal: {'✅' if goal_achieved else '⏳'} | "
+        f"Goal: {'Yes' if goal_achieved else 'No'} | "
         f"Reason: {reasoning[:60]}..."
     )
     
@@ -186,8 +156,6 @@ def meta_reasoner_node( state: AgentState) -> Dict[str, Any]:
 
 
 def _build_recent_summary(recent_sessions: list) -> str:
-    """Build a summary of recent session performance."""
-    
     if not recent_sessions:
         return "No sessions yet"
     
@@ -204,14 +172,11 @@ def _build_recent_summary(recent_sessions: list) -> str:
 
 
 def _calculate_trend(recent_sessions: list) -> str:
-    """Calculate performance trend from recent sessions."""
-    
     if len(recent_sessions) < 2:
         return "insufficient_data"
     
     scores = [s.get("score", 0.0) for s in recent_sessions]
     
-    # Simple trend: compare first half to second half
     mid = len(scores) // 2
     first_half_avg = sum(scores[:mid]) / len(scores[:mid])
     second_half_avg = sum(scores[mid:]) / len(scores[mid:])

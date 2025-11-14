@@ -12,25 +12,6 @@ from tools.llm import get_llm
 
 
 def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Agent decides which teaching strategy to use next.
-    
-    AGENTIC BEHAVIORS:
-    - Analyzes session history to see what's working
-    - Considers strategy effectiveness scores
-    - Notices patterns (e.g., "user keeps failing with direct")
-    - Makes intelligent choice based on context
-    - Updates attempt counters
-    
-    This is DYNAMIC TOOL SELECTION - the core of agentic behavior.
-    
-    Args:
-        state: Current agent state
-        
-    Returns:
-        Dictionary with state updates
-    """
-    
     print("\n" + "="*60)
     print("STRATEGY SELECTOR NODE")
     print("="*60)
@@ -62,7 +43,6 @@ def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
     print(f"  - Viable strategies: {len(viable_strategies)}")
     
     if not viable_strategies:
-        # All strategies exhausted - reset
         print("All strategies exhausted - resetting attempts")
         
         decision = "Reset strategy attempts - trying fresh approach"
@@ -72,16 +52,12 @@ def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
             "decision_log": state.get("decision_log", []) + [decision]
         }
     
-    # Analyze Recent Performance
-    
-    # Get last 3 sessions
     recent_sessions = sessions[-3:] if len(sessions) >= 3 else sessions
     
     print(f"\nRecent performance:")
     for i, session in enumerate(recent_sessions, 1):
         print(f"  {i}. {session['strategy']:20s} - Score: {session['score']:.2f}")
     
-    # Build context summary for LLM
     if recent_sessions:
         recent_summary = "\n".join([
             f"- Session {session['session_id']}: "
@@ -91,9 +67,6 @@ def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
     else:
         recent_summary = "No sessions yet (this is the first)"
     
-    # Prepare Strategy Options
-    
-    # Rank strategies by effectiveness
     ranked_strategies = rank_strategies(viable_strategies, recent_sessions)
     
     strategies_desc = "\n".join([
@@ -107,8 +80,6 @@ def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
     print(f"\nStrategy options (ranked by effectiveness):")
     for s in ranked_strategies:
         print(f"  - {s['name']:20s} (eff: {s['effectiveness']:.2f})")
-    
-    # Agent Meta-Reasons About Strategy Choice
     
     print(f"\nAgent reasoning about strategy choice...")
     
@@ -146,16 +117,12 @@ def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
         reasoning = f"Fallback: chose highest effectiveness strategy"
         confidence = 0.5
     
-    # Validate Choice
-    
     valid_strategy_names = [s["name"] for s in viable_strategies]
     
     if chosen_strategy not in valid_strategy_names:
         print(f"Chosen strategy '{chosen_strategy}' not viable")
         chosen_strategy = ranked_strategies[0]["name"]
         reasoning = f"Adjusted to viable strategy: {chosen_strategy}"
-    
-    # Update State
     
     new_attempts = strategy_attempts.copy()
     new_attempts[chosen_strategy] = new_attempts.get(chosen_strategy, 0) + 1
@@ -180,22 +147,12 @@ def strategy_selector_node(state: AgentState) -> Dict[str, Any]:
 
 
 def analyze_strategy_pattern(sessions: List[LearningSession]) -> Dict[str, Any]:
-    """
-    Analyze session history to detect patterns.
-    
-    Returns insights like:
-    - Which strategies are working
-    - Which are failing
-    - Is there a trend
-    """
-    
     if not sessions:
         return {
             "pattern": "no_data",
             "recommendation": "try_highest_effectiveness"
         }
     
-    # Count successes per strategy
     strategy_performance = {}
     
     for session in sessions:
@@ -207,11 +164,9 @@ def analyze_strategy_pattern(sessions: List[LearningSession]) -> Dict[str, Any]:
         
         strategy_performance[strategy]["scores"].append(score)
     
-    # Calculate averages
     for strategy, data in strategy_performance.items():
         data["avg"] = sum(data["scores"]) / len(data["scores"])
     
-    # Find best and worst
     if strategy_performance:
         best_strategy = max(strategy_performance.items(), key=lambda x: x[1]["avg"])
         worst_strategy = min(strategy_performance.items(), key=lambda x: x[1]["avg"])

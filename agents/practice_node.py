@@ -1,10 +1,3 @@
-"""
-Practice Node
-
-This module implements the practice node that generates practice questions
-based on what was taught and collects student responses.
-"""
-
 from typing import Dict, Any
 
 from core.state import AgentState
@@ -32,10 +25,8 @@ def practice_node(state: AgentState) -> Dict[str, Any]:
     """
     
     print("\n" + "="*60)
-    print("✏️  PRACTICE NODE")
+    print("Practice Node")
     print("="*60)
-    
-    # ===== STEP 1: Extract Context =====
     
     strategy = state.get("current_strategy", "direct_explanation")
     topic = state.get("topic", "Unknown Topic")
@@ -43,18 +34,14 @@ def practice_node(state: AgentState) -> Dict[str, Any]:
     current_explanation = state.get("current_explanation", "")
     teaching_data = state.get("current_teaching_data", {})
     
-    print(f"\n🎯 Strategy: {strategy}")
-    print(f"📖 Topic: {topic}")
-    print(f"👤 Student Level: {student_level:.2f}")
+    print(f"\nStrategy: {strategy}")
+    print(f"Topic: {topic}")
+    print(f"Student Level: {student_level:.2f}")
     
-    # ===== STEP 2: Generate Practice Question =====
+    print(f"\nGenerating practice question...")
     
-    print(f"\n🤖 Generating practice question...")
-    
-    # Create teaching summary from teaching_data
     teaching_summary = _create_teaching_summary(strategy, teaching_data, current_explanation)
     
-    # Generate practice question prompt
     prompt = PRACTICE_QUESTION_PROMPT.format(
         topic=topic,
         student_level=student_level,
@@ -62,31 +49,26 @@ def practice_node(state: AgentState) -> Dict[str, Any]:
         teaching_summary=teaching_summary
     )
     
-    # Call LLM
     llm = get_llm(use_mock=False)
     response = llm.invoke(prompt)
     
-    # Handle response format
     if hasattr(response, 'content'):
         response_text = response.content
     else:
         response_text = str(response)
     
-    print(f"✅ LLM response received")
+    print(f"LLM response received")
     
-    # ===== STEP 3: Parse Practice Question =====
-    
-    print(f"\n🔍 Parsing practice question...")
+    print(f"\nParsing practice question...")
     
     try:
         practice_data = parse_practice_question(response_text)
-        print(f"✅ Successfully parsed practice question")
+        print(f"Successfully parsed practice question")
         
     except Exception as e:
-        print(f"⚠️  Parse error: {e}")
+        print(f"Parse error: {e}")
         print(f"   Using fallback practice question")
         
-        # Use safe parser with fallback
         practice_data = safe_parse(response_text, parse_practice_question)
     
     question = practice_data.get("question", "What did you learn?")
@@ -95,43 +77,35 @@ def practice_node(state: AgentState) -> Dict[str, Any]:
     hints = practice_data.get("hints", [])
     reasoning = practice_data.get("reasoning", "")
     
-    # ===== STEP 4: Display Question and Get Student Input =====
-    
-    print(f"\n📝 Practice Question:")
+    print(f"\nPractice Question:")
     print(f"   {question}")
     
     if hints:
-        print(f"\n   💡 Hints available:")
+        print(f"\nHints available:")
         for i, hint in enumerate(hints, 1):
             print(f"      {i}. {hint}")
     
     if reasoning:
-        print(f"\n   💭 Why this question: {reasoning}")
+        print(f"\nWhy this question: {reasoning}")
     
-    # Get student answer
-    print(f"\n👤 Your answer:")
+    print(f"\nYour answer:")
     user_answer = input("   ").strip()
     
     if not user_answer:
-        print("   ⚠️  No answer provided, using empty string")
+        print("No answer provided, using empty string")
         user_answer = ""
     
-    # ===== STEP 5: Return Updates =====
-    
-    # Store question data and user answer in state for evaluate_node
-    print(f"\n✅ Answer collected. Ready for evaluation.")
+    print(f"\nAnswer collected. Ready for evaluation.")
     
     return {
         "current_question": question,
         "current_correct_answer": expected_answer,
         "current_user_answer": user_answer,
-        "current_question_difficulty": difficulty  # Store difficulty for evaluation
+        "current_question_difficulty": difficulty
     }
 
 
-def _create_teaching_summary(strategy: str, teaching_data: Dict[str, Any], current_explanation: str) -> str:
-    """Create a summary of teaching content for practice question generation."""
-    
+def _create_teaching_summary(strategy: str, teaching_data: Dict[str, Any], current_explanation: str) -> str:        
     if not teaching_data:
         return current_explanation or "Teaching content provided"
     
