@@ -140,7 +140,7 @@ The workflow loops back to **Strategy Selector** if continuing, or ends if the g
 Run the main script:
 
 ```bash
-python main.py
+uv run python main.py
 ```
 
 The system will prompt you to enter a topic to learn (e.g., "binary search", "Bayes theorem"). It will then:
