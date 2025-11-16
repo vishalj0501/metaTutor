@@ -1,10 +1,10 @@
-# TeachAgent: Adaptive Learning System
+# MetaTutor: Adaptive Learning System
 
 An intelligent, adaptive teaching agent built with LangGraph that personalizes learning experiences through dynamic strategy selection, continuous assessment, and meta-reasoning.
 
 ## 🎯 Overview
 
-TeachAgent is an AI-powered educational system that adapts its teaching approach based on student performance. It uses a sophisticated workflow to diagnose student knowledge, select optimal teaching strategies, deliver personalized content, and make intelligent decisions about when to continue, adjust, or conclude learning sessions.
+MetaTutor is an AI-powered educational system that adapts its teaching approach based on student performance. It uses a sophisticated workflow to diagnose student knowledge, select optimal teaching strategies, deliver personalized content, and make intelligent decisions about when to continue, adjust, or conclude learning sessions.
 
 ## ✨ Features
 
@@ -22,7 +22,7 @@ TeachAgent is an AI-powered educational system that adapts its teaching approach
 
 ## 🏗️ Architecture
 
-TeachAgent uses **LangGraph** to orchestrate a multi-stage teaching workflow. The system follows a structured pipeline that adapts based on student performance and learning outcomes.
+MetaTutor uses **LangGraph** to orchestrate a multi-stage teaching workflow. The system follows a structured pipeline that adapts based on student performance and learning outcomes.
 
 ### Workflow Graph
 
@@ -112,8 +112,8 @@ The workflow loops back to **Strategy Selector** if continuing, or ends if the g
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/vishalj0501/teachagent
-   cd teachagent
+   git clone https://github.com/vishalj0501/metaTutor
+   cd metaTutor
    ```
 
 2. **Install dependencies**:
@@ -192,7 +192,7 @@ Decision: continue
 ## 📁 Project Structure
 
 ```
-teachagent/
+metaTutor/
 ├── agents/                  # Core agent nodes
 │   ├── diagnostic.py       # Diagnostic assessment logic
 │   ├── strategy_selector.py # Strategy selection logic

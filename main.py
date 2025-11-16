@@ -5,7 +5,7 @@ from core.graph import build_teaching_graph
 
 def main():
     print("="*80)
-    print("TEACHAGENT: Adaptive Learning System")
+    print("METATUTOR: Adaptive Learning System")
     print("="*80)
     
     topic = input("\nEnter a topic to learn (e.g., 'binary search', 'Bayes theorem'): ").strip()

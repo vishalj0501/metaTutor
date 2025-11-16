@@ -1,4 +1,4 @@
 import logging
 
 # Configure the logger
-logger = logging.getLogger("teachagent")
+logger = logging.getLogger("metaTutor")
