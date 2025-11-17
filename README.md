@@ -131,7 +131,18 @@ The workflow loops back to **Strategy Selector** if continuing, or ends if the g
    Then edit `.env` and add your API key:
    ```bash
    GOOGLE_API_KEY=your_google_api_key_here
+   
+   # Optional: LangSmith tracing (for monitoring and debugging LLM calls)
+   # Get your API key from https://smith.langchain.com/
+   LANGCHAIN_API_KEY=your_langsmith_api_key_here
+   LANGCHAIN_PROJECT=metaTutor  # Optional: customize project name
    ```
+   
+   **LangSmith Integration**: This project includes LangSmith integration for tracing and monitoring LLM calls. To enable it:
+   - Sign up for a free account at [LangSmith](https://smith.langchain.com/)
+   - Get your API key from the settings page
+   - Add `LANGCHAIN_API_KEY` to your `.env` file
+   - All LLM calls will be automatically traced and visible in your LangSmith dashboard
 
 ## 📖 Usage
 

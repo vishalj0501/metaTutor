@@ -8,6 +8,14 @@ load_dotenv()
 
 
 
+langsmith_api_key = os.getenv("LANGCHAIN_API_KEY")
+if langsmith_api_key:
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ.setdefault("LANGCHAIN_PROJECT", os.getenv("LANGCHAIN_PROJECT", "metaTutor"))
+else:
+    os.environ.setdefault("LANGCHAIN_TRACING_V2", "false")
+
+
 class LLM:
     """LLM wrapper that uses real or mock implementation."""
 

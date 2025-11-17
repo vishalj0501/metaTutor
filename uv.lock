@@ -527,6 +527,7 @@ dependencies = [
     { name = "langchain-google-genai" },
     { name = "langchain-openai" },
     { name = "langgraph" },
+    { name = "langsmith" },
 ]
 
 [package.metadata]
@@ -535,6 +536,7 @@ requires-dist = [
     { name = "langchain-google-genai", specifier = ">=2.1.12" },
     { name = "langchain-openai", specifier = ">=0.3.35" },
     { name = "langgraph", specifier = ">=0.6.10" },
+    { name = "langsmith", specifier = ">=0.1.0" },
 ]
 
 [[package]]
